@@ -1,5 +1,4 @@
-# uTorrent 屏蔽迅雷方法(反吸血)
-
+# uTorrent 自动屏蔽迅雷脚本
 ## 方法
 
 1.  根据 uTorrent 的 WebUI API 发送 http request 获取到所有种子的 peers 信息
@@ -77,25 +76,61 @@ utorrent=
             return
         else
             log blocks
-        ipfilter = new File 'C:/Users/xxx/AppData/Roaming/uTorrent/ipfilter.dat'
+        ipfilter = new File 'C:/Users/shf/AppData/Roaming/uTorrent/ipfilter.dat'
         ipfilter.data += (x.ip for x in blocks).join('\n') + '\n'
         ipfilter.save()
         log 'ipfilter.dat updated'
-        await utorrent.call params:
+        await @call params:
             action: 'setsetting'
             s: 'ipfilter.enable'
             v: '1'
         log 'ipfilter.dat reloaded'
-        
+
     run: ->
-        await utorrent.init()
-        await utorrent.block_xunlei()
-        @task = setInterval -> 
-            await utorrent.block_xunlei()
+        await @init()
+        await @block_xunlei()
+        @task = setInterval => 
+            await @block_xunlei()
         , 3*60*1000
+
         
     stop: ->
         @task.clearInterval()
 
 ```
+
+## 日志
+
+未检测到迅雷时
+
+```
+no xunlei clients detected
+当前已连接 peers
+[ { ip: '180.94.154.163', client: 'µTorrent/3.5.4.0' },
+  { ip: '223.140.248.38', client: 'BitComet 1.53' },
+  { ip: '101.88.108.19', client: 'µTorrent/2.2.1.0' },
+  { ip: '39.161.242.50', client: 'Unknown FD/5.1.0.0' },
+  { ip: '171.88.70.72', client: 'Transmission 2.94' },
+  { ip: '218.79.69.196', client: '[FAKE] µTorrent/3.0.0.0' },
+  { ip: '123.204.251.13', client: 'BitComet 1.51' },
+  { ip: '118.150.188.121', client: 'μTorrent 3.5.3' },
+  { ip: '118.150.188.121', client: 'μTorrent 3.5.3' },
+  { ip: '118.150.188.121', client: 'μTorrent 3.5.3' } ]
+[ { ip: '222.164.100.163', client: '7.9.34.4908' } ]
+```
+
+检测到迅雷时
+
+```
+使用迅雷的 peers
+[ { ip: '183.25.54.216', client: '-XL0012-溶S鑋亾#+4厓' } ]
+reading C:/Users/shf/AppData/Roaming/uTorrent/ipfilter.dat
+wrote C:/Users/shf/AppData/Roaming/uTorrent/ipfilter.dat
+ipfilter.dat updated
+ipfilter.dat reloaded
+```
+
+#### uTorrent Log
+
+[2018-11-19 16:50:25]  Loaded ipfilter.dat (51 entries)
 
