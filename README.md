@@ -29,7 +29,7 @@ utorrent=
         token_html = await request
             uri: @root_url + 'token.html'
             auth:
-                user: 'admin'
+                user: 'shf'
                 pass: 'xxxxxx'
             jar: @cookies
         $ = cheerio.load token_html
@@ -45,7 +45,7 @@ utorrent=
                 params...
             }
             auth:
-                user: 'admin'
+                user: 'shf'
                 pass: 'xxxxxx'
             jar: @cookies
     
@@ -63,41 +63,59 @@ utorrent=
         peers = []
         for hash in @hashes
             peers.append((await @get_peers hash)[1])
-        for peer in peers
+        peers = for peer in peers
             ip: peer[1]
             client: peer[5]
+        peers.unique().sortBy 'client'
         
-    block_xunlei: ->
+    block: ->
         peers = await @get_all_peers()
         blocks = peers.filter (x)-> x.client.match /(-XL0012-)|(Xunlei)|(^7\.)|(Xfplay)/i
-        if blocks.isEmpty()
-            log 'no xunlei clients detected'
-            log peers
-            return
-        else
-            log blocks
+        if blocks.isEmpty() then return
+        log 'block', blocks
+        
         ipfilter = new File 'C:/Users/shf/AppData/Roaming/uTorrent/ipfilter.dat'
-        ipfilter.data += (x.ip for x in blocks).join('\n') + '\n'
-        ipfilter.save()
-        log 'ipfilter.dat updated'
+        ipfilter.save data: ipfilter.data.trim().split('\n').append(x.ip for x in blocks).unique().sortBy((x)-> x.split '.').join('\n') + '\n'
+        # log 'ipfilter.dat updated'
+        
         await @call params:
             action: 'setsetting'
             s: 'ipfilter.enable'
             v: '1'
-        log 'ipfilter.dat reloaded'
-
+        # log 'ipfilter.dat reloaded'
+        
+    unblock: ->
+        await @call params:
+            action: 'setsetting'
+            s: 'ipfilter.enable'
+            v: '0'
+    
     run: ->
-        await @init()
-        await @block_xunlei()
+        await @block()
         @task = setInterval => 
-            await @block_xunlei()
+            await @block()
         , 3*60*1000
-
         
     stop: ->
-        @task.clearInterval()
+        clearInterval @task
 
 ```
+
+## 依赖
+
+Node.js
+
+uTorrent WebUI 启用
+
+CoffeeScript
+
+NPM Packages
+
+​    Sugar.js
+
+​    request-promise-native
+
+​    cheerio
 
 ## 日志
 
