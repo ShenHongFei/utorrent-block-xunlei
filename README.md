@@ -1,9 +1,7 @@
 # uTorrent 自动屏蔽迅雷脚本
-## 方法
+## 功能
 
-1.  根据 uTorrent 的 WebUI API 发送 http request 获取到所有种子的 peers 信息
-2.  按照 client name 筛选出使用迅雷的 peer IP，写入 ipfilter.dat 文件
-3.  发送 http request 让 uTorrent 重新加载 ipfilter.dat
+每隔 3 分钟，自动检查 uTorrent 已连接的用户列表，找出迅雷客户端，强制断开，不给吸血雷上传任何数据，并将用户 IP 加入黑名单阻止其再次连接，把带宽留给正规 BT 客户端。
 
 ## 屏蔽列表
 
@@ -15,13 +13,23 @@ Xunlei/***
 
 Xfplay
 
-## 效果
+## 实现方法
 
-每隔一段时间，已连接用户中使用迅雷客户端的 IP 将会被封锁
+1.  根据 uTorrent 的 WebUI API 发送 http request 获取所有已连接用户(peers)信息
+2.  按照 client name 筛选出使用迅雷的 peer IP，写入 ipfilter.dat 文件
+3.  发送 http request 让 uTorrent 重新加载 ipfilter.dat
+4.  uTorrent 禁止 ipfilter.dat 中的 IP 连接
 
 ## 脚本
 
 ```coffeescript
+cheerio = require 'cheerio'
+request = require 'request-promise-native'
+Sugar   = require('sugar').extend()
+
+# 自行修改脚本中 root_url, auth, ipfilter_path 相关内容
+# 检查间隔时间可在脚本中自定义，IP黑名单(ipfilter.dat) 建议每天清空一次。
+
 utorrent=
     init: ->
         @root_url= 'http://127.0.0.1:10000/gui/'
@@ -69,13 +77,16 @@ utorrent=
         peers.unique().sortBy 'client'
         
     block: ->
+        await @get_torrents()
         peers = await @get_all_peers()
         blocks = peers.filter (x)-> x.client.match /(-XL0012-)|(Xunlei)|(^7\.)|(Xfplay)/i
-        if blocks.isEmpty() then return
+        if blocks.isEmpty()
+            # log 'no xunlei clients detected'
+            return
         log 'block', blocks
         
-        ipfilter = new File 'C:/Users/shf/AppData/Roaming/uTorrent/ipfilter.dat'
-        ipfilter.save data: ipfilter.data.trim().split('\n').append(x.ip for x in blocks).unique().sortBy((x)-> x.split '.').join('\n') + '\n'
+        ipfilter_path = 'C:/Users/shf/AppData/Roaming/uTorrent/ipfilter.dat'
+        fs.writeFileSync(ipfilter_path, fs.readFileSync(ipfilter_path, 'UTF8').trim().split('\n').append(x.ip for x in blocks).unique().join('\n') + '\n')
         # log 'ipfilter.dat updated'
         
         await @call params:
@@ -99,13 +110,28 @@ utorrent=
     stop: ->
         clearInterval @task
 
+main= ->
+    await utorrent.init()
+    await utorrent.run()
+
+main()
 ```
 
 ## 依赖
 
-Node.js
+uTorrent
 
-uTorrent WebUI 启用
+​    启用 uTorrent 网页界面
+
+​    在 uTorrent 目录下新建空白 ipfilter.dat 文件
+
+​    高级选项
+
+​        ipfilter.enable: true
+
+​        bt.use_rangeblock: false
+
+Node.js
 
 CoffeeScript
 
@@ -122,8 +148,7 @@ NPM Packages
 未检测到迅雷时
 
 ```
-no xunlei clients detected
-当前已连接 peers
+当前已连接用户
 [ { ip: '180.94.154.163', client: 'µTorrent/3.5.4.0' },
   { ip: '223.140.248.38', client: 'BitComet 1.53' },
   { ip: '101.88.108.19', client: 'µTorrent/2.2.1.0' },
@@ -131,17 +156,17 @@ no xunlei clients detected
   { ip: '171.88.70.72', client: 'Transmission 2.94' },
   { ip: '218.79.69.196', client: '[FAKE] µTorrent/3.0.0.0' },
   { ip: '123.204.251.13', client: 'BitComet 1.51' },
-  { ip: '118.150.188.121', client: 'μTorrent 3.5.3' },
-  { ip: '118.150.188.121', client: 'μTorrent 3.5.3' },
-  { ip: '118.150.188.121', client: 'μTorrent 3.5.3' } ]
-[ { ip: '222.164.100.163', client: '7.9.34.4908' } ]
+  { ip: '154.103.221.22', client: 'qBittorrent 4.1.3' },
+  { ip: '118.150.188.121', client: 'μTorrent 3.5.3' }]
 ```
 
 检测到迅雷时
 
 ```
-使用迅雷的 peers
-[ { ip: '183.25.54.216', client: '-XL0012-溶S鑋亾#+4厓' } ]
+使用迅雷的用户
+[ { ip: '183.25.54.216', client: '-XL0012-溶S鑋亾#+4厓' },
+{ ip: '223.81.192.235', client: '-XL0012-輓%??1涙鷉' },
+{ ip: '223.72.70.198', client: '7.10.35.366' }]
 reading C:/Users/shf/AppData/Roaming/uTorrent/ipfilter.dat
 wrote C:/Users/shf/AppData/Roaming/uTorrent/ipfilter.dat
 ipfilter.dat updated
@@ -150,5 +175,15 @@ ipfilter.dat reloaded
 
 #### uTorrent Log
 
-[2018-11-19 16:50:25]  Loaded ipfilter.dat (51 entries)
+勾选 记录用户通讯信息 > 记录用户拦截连接
+
+```
+[2018-11-22 19:03:43]  Loaded ipfilter.dat (51 entries)
+[2018-11-22 19:03:46]  IpFilter blocked peer 223.81.192.235
+[2018-11-22 19:03:49]  IpFilter blocked peer 223.81.192.235
+[2018-11-22 19:04:06]  IpFilter blocked peer 223.81.192.235
+[2018-11-22 19:04:21]  IpFilter blocked peer 183.25.54.216
+[2018-11-22 19:04:46]  IpFilter blocked peer 223.81.192.235
+...
+```
 
