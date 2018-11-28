@@ -122,29 +122,24 @@ main()
 
 ## 依赖
 
->uTorrent Pro 3.5.4 (build 44846) [32-bit] & uTorrent WebUI v0.388
->
->​    启用 uTorrent 网页界面
->
->​    在 uTorrent 目录下保证 ipfilter.dat 文件存在（若不存在则新建空白 ipfilter.dat 文件），脚本会在原有 ipfilter.dat 文件内容之后添加被屏蔽的迅雷 IP，不影响已有内容及其功能。 
->
->​    高级选项
->
->​        ipfilter.enable: true
->
->​        bt.use_rangeblock: false
->
->Node.js
->
->CoffeeScript
->
->NPM Packages
->
->​    Sugar.js
->
->​    request-promise-native
->
->​    cheerio
+uTorrent Pro 3.5.4 (build 44846) [32-bit] & uTorrent WebUI v0.388
+  - 启用 uTorrent 网页界面
+  - 在 uTorrent 目录下保证 ipfilter.dat 文件存在（若不存在则新建空白 ipfilter.dat 文件），脚本会在原有 ipfilter.dat 文件内容之后添加被屏蔽的迅雷 IP，不影响已有内容及其功能。 
+  - 高级选项
+      - ipfilter.enable: true
+      - bt.use_rangeblock: false
+
+Node.js
+
+CoffeeScript
+
+NPM Packages
+
+  - Sugar.js
+
+  - request-promise-native
+
+  - cheerio
 
 ## 日志
 
