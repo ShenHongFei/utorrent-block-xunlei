@@ -1,7 +1,7 @@
 # uTorrent 自动屏蔽迅雷脚本
 ## 功能
 
-每隔 3 分钟，自动检查 uTorrent 已连接的用户列表，找出迅雷客户端，强制断开，不给吸血雷上传任何数据，并将用户 IP 加入黑名单阻止其再次连接，把带宽留给正规 BT 客户端。
+每隔 30 秒，自动检查 uTorrent 已连接的用户列表，找出迅雷客户端，强制断开，不给吸血雷上传任何数据，并将用户 IP 加入黑名单阻止其再次连接，把带宽留给正规 BT 客户端。
 
 ## 屏蔽列表
 
@@ -26,6 +26,8 @@ Xfplay
 cheerio = require 'cheerio'
 request = require 'request-promise-native'
 Sugar   = require('sugar').extend()
+
+log = console.log.bind console
 
 # 自行修改脚本中 root_url, auth, ipfilter_path 相关内容
 # 检查间隔时间可在脚本中自定义，IP黑名单(ipfilter.dat) 建议每天清空一次。
@@ -81,7 +83,8 @@ utorrent=
         peers = await @get_all_peers()
         blocks = peers.filter (x)-> x.client.match /(-XL0012-)|(Xunlei)|(^7\.)|(Xfplay)/i
         if blocks.isEmpty()
-            # log 'no xunlei clients detected'
+            log 'no xunlei clients detected, current peers:'
+            log peers
             return
         log 'block', blocks
         
@@ -105,7 +108,7 @@ utorrent=
         await @block()
         @task = setInterval => 
             await @block()
-        , 3*60*1000
+        , 30*1000
         
     stop: ->
         clearInterval @task
@@ -119,29 +122,29 @@ main()
 
 ## 依赖
 
-uTorrent
-
-​    启用 uTorrent 网页界面
-
-​    在 uTorrent 目录下新建空白 ipfilter.dat 文件
-
-​    高级选项
-
-​        ipfilter.enable: true
-
-​        bt.use_rangeblock: false
-
-Node.js
-
-CoffeeScript
-
-NPM Packages
-
-​    Sugar.js
-
-​    request-promise-native
-
-​    cheerio
+>uTorrent Pro 3.5.4 (build 44846) [32-bit] & uTorrent WebUI v0.388
+>
+>​    启用 uTorrent 网页界面
+>
+>​    在 uTorrent 目录下保证 ipfilter.dat 文件存在（若不存在则新建空白 ipfilter.dat 文件），脚本会在原有 ipfilter.dat 文件内容之后添加被屏蔽的迅雷 IP，不影响已有内容及其功能。 
+>
+>​    高级选项
+>
+>​        ipfilter.enable: true
+>
+>​        bt.use_rangeblock: false
+>
+>Node.js
+>
+>CoffeeScript
+>
+>NPM Packages
+>
+>​    Sugar.js
+>
+>​    request-promise-native
+>
+>​    cheerio
 
 ## 日志
 
@@ -186,4 +189,6 @@ ipfilter.dat reloaded
 [2018-11-22 19:04:46]  IpFilter blocked peer 223.81.192.235
 ...
 ```
+
+
 
