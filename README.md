@@ -23,9 +23,12 @@ Xfplay
 ## 脚本
 
 ```coffeescript
+fs      = require 'fs'
+
 cheerio = require 'cheerio'
 request = require 'request-promise-native'
 Sugar   = require('sugar').extend()
+
 
 log = console.log.bind console
 
