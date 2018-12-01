@@ -13,6 +13,12 @@ Xunlei/***
 
 Xfplay
 
+FDM
+
+dandanplay
+
+（dandanplay 默认 2 小时后停止做种，FDM 只要清空任务列表后就不再做种，使用这两个软件的用户大部分没有做种意识，也不予上传）
+
 ## 实现方法
 
 1.  根据 uTorrent 的 WebUI API 发送 http request 获取所有已连接用户(peers)信息
@@ -84,7 +90,7 @@ utorrent=
     block: ->
         await @get_torrents()
         peers = await @get_all_peers()
-        blocks = peers.filter (x)-> x.client.match /(-XL0012-)|(Xunlei)|(^7\.)|(Xfplay)/i
+        blocks = peers.filter (x)-> x.client.match /(-XL0012-)|(Xunlei)|(^7\.)|(Xfplay)|(dandanplay)|(FDM)/i
         if blocks.isEmpty()
             log 'no xunlei clients detected, current peers:'
             log peers
