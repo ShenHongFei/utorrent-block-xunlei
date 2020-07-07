@@ -72,7 +72,9 @@ go.torrent
 ```
 
 ## 相关项目
-Python 脚本实现: [https://github.com/yefengo/utorrent-block-xunlei](https://github.com/yefengo/utorrent-block-xunlei)
+- Python 命令行工具 ban-peers: [https://github.com/SeaHOH/ban-peers](https://github.com/SeaHOH/ban-peers)
+- Python 脚本实现: [https://github.com/yefengo/utorrent-block-xunlei](https://github.com/yefengo/utorrent-block-xunlei)
+- qBittorrent-Enhanced-Edition: [https://github.com/c0re100/qBittorrent-Enhanced-Edition](https://github.com/c0re100/qBittorrent-Enhanced-Edition)
 
 
 ## ------------ 以下部分 deprecated ------------
